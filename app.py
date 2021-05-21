@@ -27,5 +27,5 @@ def create_todo():
 
 @app.route('/')
 def index(): # this is the controller in MVC
-    return render_template('index.html', data=Todo.query.all())
+    return render_template('index.html', data=Todo.query.all()) # refreshes the page
 
