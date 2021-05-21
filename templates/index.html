@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Todo App</title>
+    </head>
+    <body>
+        <form action="/todos/create" method="post">
+            <label for="input_desc">What do you need to do?</label><br>
+            <input type="text" name="description" id="input_desc"/>
+            <button type="submit">Submit</button>
+        </form>
+
+        <ul>
+            {% for d in data %}
+            <li>{{d.descr}}</li>
+            {% endfor %}
+         </ul>
+    </body>
+</html>
