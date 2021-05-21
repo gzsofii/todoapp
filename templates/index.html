@@ -5,6 +5,10 @@
             .hidden {
                 display: none;
             }
+
+            #error {
+                color: red;
+            }
         </style>
     </head>
     <body>
@@ -13,7 +17,7 @@
             <input type="text" name="description" id="input_desc"/>
             <button type="submit">Submit</button>
         </form>
-        <div id="error" class="hidden">Something went wrong</div>
+        <div id="error" class="hidden">Something went wrong!</div>
 
         <ul id="ul_todos">
             {% for d in data %}

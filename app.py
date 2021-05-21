@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
+import sys
 
 app = Flask(__name__) #depending on if it’s started as application or imported as module the name will be different ('__main__' versus the actual import name). Flask will know from this, where to look for templates, etc
 db = SQLAlchemy(app)
@@ -20,14 +21,23 @@ db.create_all() # tables get created
 
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
-    descr = request.get_json()['description']
-    todo = Todo(descr = descr)
-    db.session.add(todo)
-    db.session.commit()
-    return jsonify({
-        'description': todo.descr
-    })
-
+    error = False
+    body = {}
+    try:
+        descr = request.get_json()['description']
+        todo = Todo(descr = descr)
+        db.session.add(todo)
+        db.session.commit()
+        body['description'] = todo.descr
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:    
+        return jsonify(body)
+    
 @app.route('/')
 def index(): # this is the controller in MVC
     return render_template('index.html', data=Todo.query.all()) # refreshes the page
