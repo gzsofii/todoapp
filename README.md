@@ -12,3 +12,6 @@ Udacity Full Stack Developer program
 * Stage 1
     * synchronous request
     * refresh to update screen
+* Stage 2
+    * async request with Fetch
+    * no refresh, item is appended to list
