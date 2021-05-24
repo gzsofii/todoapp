@@ -9,6 +9,10 @@
             #error {
                 color: red;
             }
+
+            ul {
+                list-style-type: none;
+            }
         </style>
     </head>
     <body>
@@ -21,10 +25,34 @@
 
         <ul id="ul_todos">
             {% for d in data %}
-            <li>{{d.descr}}</li>
+            <li>
+                <input type="checkbox" class="check_completed" data-id="{{ d.id }}" {% if d.completed %} checked {% endif %}/>
+                {{d.descr}}
+            </li>
             {% endfor %}
         </ul>
         <script>
+            const checkboxes = document.querySelectorAll('.check_completed');
+            for (let i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].onchange = e => {
+                    console.log(e)
+                    const todoID = e.target.dataset['id'] // it will find the attribute data-id
+                    console.log(todoID)
+                    const isCompletedNow = e.target.checked;
+                    fetch('/todos/' + todoID + '/set-completed', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            'completed': isCompletedNow
+                        }),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then( () => document.getElementById('error').className = 'hidden')
+                    .catch(() => document.getElementById('error').className = '')
+                }
+            }
+
             document.getElementById('form_todo').onsubmit = function(e) {
                 e.preventDefault();
                 fetch('/todos/create', {
@@ -40,13 +68,13 @@
                 .then(jresp => {
                     console.log(jresp);
                     const listitem = document.createElement('LI');
+                   // const inputitem = document.createElement('INPUT')
+                    //listitem.appendChild('<input type="checkbox" class="check_completed"/>' + jresp['description'])
                     listitem.innerHTML = jresp['description'];
                     document.getElementById('ul_todos').appendChild(listitem);
                     document.getElementById('error').className = 'hidden';
                 })
-                .catch(() => {
-                    document.getElementById('error').className = '';
-                })
+                .catch(() => document.getElementById('error').className = '')
             }
         </script>
     </body>

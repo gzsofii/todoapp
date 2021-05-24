@@ -11,7 +11,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #not to get a warning when 
 
 migrate = Migrate(app, db)
 
-
 class Todo(db.Model):
     __tablename__ = 'todos'
     id = db.Column(db.Integer, primary_key=True)
@@ -19,17 +18,16 @@ class Todo(db.Model):
     completed = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
-        return f'<Todo {self.id} {self.desc}>'
+        return f'<Todo {self.id} {self.descr} {self.completed}>'
 
 #db.create_all() # tables get created
-
 
 @app.route('/todos/create', methods=['POST'])
 def create_todo():
     error = False
     body = {}
     try:
-        descr = request.get_json()['description']
+        descr = request.get_json()['description'] # get the description attr from the json object of the request
         todo = Todo(descr = descr)
         db.session.add(todo)
         db.session.commit()
@@ -43,7 +41,23 @@ def create_todo():
     if not error:    
         return jsonify(body)
     
+@app.route('/todos/<todo_id>/set-completed', methods=['POST'])
+def set_completed(todo_id):
+    print('todo id: ', todo_id)
+    try:
+        todo = Todo.query.get(todo_id)
+        completed = request.get_json()['completed']       
+        todo.completed = completed
+        db.session.commit()
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
+
+
 @app.route('/')
 def index(): # this is the controller in MVC
-    return render_template('index.html', data=Todo.query.all()) # refreshes the page
+    return render_template('index.html', data=Todo.query.order_by('id').all()) # refreshes the page
 
