@@ -32,6 +32,8 @@ def create_todo():
         db.session.add(todo)
         db.session.commit()
         body['description'] = todo.descr
+        body['id'] = todo.id
+        print(body)
     except:
         error = True
         db.session.rollback()

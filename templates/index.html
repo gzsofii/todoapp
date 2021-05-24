@@ -27,30 +27,31 @@
             {% for d in data %}
             <li>
                 <input type="checkbox" class="check_completed" data-id="{{ d.id }}" {% if d.completed %} checked {% endif %}/>
-                {{d.descr}}
+                <span>{{d.descr}}</span>
             </li>
             {% endfor %}
         </ul>
         <script>
+            const addEventListenerToCheckBox = (event) => {
+                //console.log(event)
+                const todoID = event.target.dataset['id'] // it will find the attribute data-id
+                console.log("checking item with id " + todoID)
+                const isCompletedNow = event.target.checked;
+                fetch('/todos/' + todoID + '/set-completed', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        'completed': isCompletedNow
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then( () => document.getElementById('error').className = 'hidden')
+                .catch( () => document.getElementById('error').className = '')
+            }
             const checkboxes = document.querySelectorAll('.check_completed');
             for (let i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].onchange = e => {
-                    console.log(e)
-                    const todoID = e.target.dataset['id'] // it will find the attribute data-id
-                    console.log(todoID)
-                    const isCompletedNow = e.target.checked;
-                    fetch('/todos/' + todoID + '/set-completed', {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            'completed': isCompletedNow
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    .then( () => document.getElementById('error').className = 'hidden')
-                    .catch(() => document.getElementById('error').className = '')
-                }
+                checkboxes[i].onchange = e => addEventListenerToCheckBox(e);
             }
 
             document.getElementById('form_todo').onsubmit = function(e) {
@@ -64,17 +65,26 @@
                         'Content-Type': 'application/json'
                     }
                 })
-                .then(resp => resp.json())
-                .then(jresp => {
+                .then( resp => resp.json())
+                .then( jresp => {
                     console.log(jresp);
-                    const listitem = document.createElement('LI');
-                   // const inputitem = document.createElement('INPUT')
-                    //listitem.appendChild('<input type="checkbox" class="check_completed"/>' + jresp['description'])
-                    listitem.innerHTML = jresp['description'];
+                    const listitem = document.createElement('li');
+                    const inputitem = document.createElement('input');
+                    const spanitem = document.createElement('span');
+            
+                    inputitem.type = "checkbox"
+                    inputitem.className = "check_completed";
+                    inputitem.setAttribute("data-id", jresp['id']);
+                    inputitem.onchange = (e) => addEventListenerToCheckBox(e)
+
+                    spanitem.innerHTML = jresp['description'];
+
+                    listitem.appendChild(inputitem)
+                    listitem.appendChild(spanitem);
                     document.getElementById('ul_todos').appendChild(listitem);
                     document.getElementById('error').className = 'hidden';
                 })
-                .catch(() => document.getElementById('error').className = '')
+                .catch( (err) => {document.getElementById('error').className = ''; console.log(err)})
             }
         </script>
     </body>
