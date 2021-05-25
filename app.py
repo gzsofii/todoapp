@@ -16,9 +16,16 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descr = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+    list_id = db.Column(db.Integer, db.ForeignKey('todolists.id'), nullable=False)
 
     def __repr__(self):
         return f'<Todo {self.id} {self.descr} {self.completed}>'
+
+class TodoList(db.Model):
+    __tablename__ = "todolists"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=False)
+    todos = db.relationship('Todo', backref="list", lazy=True)
 
 #db.create_all() # tables get created
 
@@ -28,7 +35,8 @@ def create_todo():
     body = {}
     try:
         descr = request.get_json()['description'] # get the description attr from the json object of the request
-        todo = Todo(descr = descr)
+        list_id = request.get_json()['list_id']
+        todo = Todo(descr = descr, list_id=list_id)
         db.session.add(todo)
         db.session.commit()
         body['description'] = todo.descr
@@ -72,7 +80,13 @@ def delete_todo(todo_id):
         db.session.close()
     return jsonify({'success': True})
 
-@app.route('/')
-def index(): # this is the controller in MVC
-    return render_template('index.html', data=Todo.query.order_by('id').all()) # refreshes the page
+@app.route('/lists/<list_id>')
+def get_list_todos(list_id): # this is the controller in MVC
+    return render_template('index.html', 
+                            lists=TodoList.query.order_by('id').all(), 
+                            active_list=TodoList.query.get(list_id),
+                            todos=Todo.query.filter_by(list_id=list_id).order_by('id').all()) # refreshes the page
 
+@app.route('/')
+def index():
+    return redirect(url_for('get_list_todos', list_id=1))
