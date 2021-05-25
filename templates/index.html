@@ -102,16 +102,23 @@
                     const listitem = document.createElement('li');
                     const inputitem = document.createElement('input');
                     const spanitem = document.createElement('span');
+                    const buttonitem = document.createElement('button');
             
                     inputitem.type = "checkbox"
                     inputitem.className = "check_completed";
                     inputitem.setAttribute("data-id", jresp['id']);
-                    inputitem.onchange = (e) => addEventListenerToCheckBox(e)
+                    inputitem.onchange = (e) => eventListenerToCheckBox(e)
 
                     spanitem.innerHTML = jresp['description'];
 
+                    buttonitem.className = "btn_delete";
+                    buttonitem.setAttribute("data-id", jresp['id']);
+                    buttonitem.innerHTML = "&cross;";
+                    buttonitem.onclick = (e) => eventListenerToDelBtn(e)
+
                     listitem.appendChild(inputitem)
                     listitem.appendChild(spanitem);
+                    listitem.appendChild(buttonitem)
                     document.getElementById('ul_todos').appendChild(listitem);
                     document.getElementById('error').className = 'hidden';
                 })
