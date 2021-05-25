@@ -1,3 +1,4 @@
+
 <html>
     <head>
         <title>Todo App</title>
@@ -12,6 +13,16 @@
 
             ul {
                 list-style-type: none;
+                width: 150px;
+            }
+
+            li button {
+                -webkit-appearance: none; /* default styles get deleted*/
+                background-color: transparent;
+                border: 0;
+                color: darkred;
+                float: right;
+                cursor: pointer;
             }
         </style>
     </head>
@@ -28,11 +39,13 @@
             <li>
                 <input type="checkbox" class="check_completed" data-id="{{ d.id }}" {% if d.completed %} checked {% endif %}/>
                 <span>{{d.descr}}</span>
+                <button class="btn_delete" data-id="{{ d.id }}">&cross;</button>
             </li>
             {% endfor %}
         </ul>
+
         <script>
-            const addEventListenerToCheckBox = (event) => {
+            const eventListenerToCheckBox = (event) => {
                 //console.log(event)
                 const todoID = event.target.dataset['id'] // it will find the attribute data-id
                 console.log("checking item with id " + todoID)
@@ -51,7 +64,25 @@
             }
             const checkboxes = document.querySelectorAll('.check_completed');
             for (let i = 0; i < checkboxes.length; i++) {
-                checkboxes[i].onchange = e => addEventListenerToCheckBox(e);
+                checkboxes[i].onchange = e => eventListenerToCheckBox(e);
+            }
+
+            const eventListenerToDelBtn = (event) => {
+                const todoID = event.target.dataset['id'] // it will find the attribute data-id
+                console.log("deleting item with id ", todoID);
+                fetch('/todos/' + todoID, {
+                    method: 'DELETE'
+                })
+                .then( resp => resp.json())                
+                .then (jresp => {
+                    if (jresp['success'] === true) {
+                        event.target.parentNode.remove()
+                    }
+                })
+            }
+            const deleteBtns = document.querySelectorAll('.btn_delete');
+            for (let i = 0; i < deleteBtns.length; i++) {
+                deleteBtns[i].onclick = e => eventListenerToDelBtn(e)
             }
 
             document.getElementById('form_todo').onsubmit = function(e) {

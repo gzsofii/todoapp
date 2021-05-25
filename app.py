@@ -58,6 +58,19 @@ def set_completed(todo_id):
         db.session.close()
     return redirect(url_for('index'))
 
+@app.route('/todos/<todo_id>', methods=['DELETE'])
+def delete_todo(todo_id):
+    print('delete todo with id ', todo_id)
+    try:
+        todo = Todo.query.get(todo_id)
+        db.session.delete(todo)
+        db.session.commit()
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    return jsonify({'success': True})
 
 @app.route('/')
 def index(): # this is the controller in MVC
