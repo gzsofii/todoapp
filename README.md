@@ -15,3 +15,6 @@ Udacity Full Stack Developer program
 * Stage 2
     * async request with Fetch
     * no refresh, item is appended to list
+* Stage 3
+    * database migration
+    * implement update and delete methods
