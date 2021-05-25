@@ -87,6 +87,27 @@ def get_list_todos(list_id): # this is the controller in MVC
                             active_list=TodoList.query.get(list_id),
                             todos=Todo.query.filter_by(list_id=list_id).order_by('id').all()) # refreshes the page
 
+@app.route('/lists/create', methods=['POST'])
+def create_list():
+    error = False
+    body = {}
+    try:
+        name = request.get_json()['name']
+        print(name)
+        list = TodoList(name=name)
+        db.session.add(list)
+        db.session.commit()
+        body['name'] = list.name
+        body['id'] = list.id
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        return jsonify(body)
+
 @app.route('/')
 def index():
     return redirect(url_for('get_list_todos', list_id=1))

@@ -13,6 +13,7 @@
             ul {
                 list-style-type: none;
                 width: 200px;
+                padding-left: 0;
             }
 
             li button {
@@ -24,13 +25,19 @@
                 cursor: pointer;
             }
 
-            #lists-wrapper {
+            #wrapper {
                 display: inline-block;
-                vertical-align: top;
                 border: 1px solid rgb(155, 155, 247);
                 border-radius: 5px;;
                 background-color: rgb(195, 195, 250);
                 padding: 10px;
+            }
+            
+            #lists-wrapper {
+                display: inline-block;
+                vertical-align: top;
+                padding: 10px;
+                
             }
 
             #todos-wrapper {
@@ -39,7 +46,7 @@
                 border: 1px solid rgb(129, 129, 240);
                 border-radius: 5px;;
                 background-color: rgb(155, 155, 247);
-                padding: 10px;
+                padding: 15px;
             }
 
             a {
@@ -48,44 +55,53 @@
 
             .a_active {
                 font-weight : bold;
+                padding-left: 15px;;
             }
 
         </style>
     </head>
 
     <body>
-        <div id="lists-wrapper">
-            <h3>Lists</h3>
-            <ul id="ul_lists">
-                {% for d in lists %}
-                <li>
-                    <a href="/lists/{{ d.id }}" {% if d.id==active_list.id %} class="a_active" {% endif %}>{{ d.name }}</a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+        <div id="wrapper">
+            <div id="lists-wrapper">
+                <h3>Lists</h3>
+                <form id="form_createlist">
+                    <label for="input_list">Name of new list: </label><br/>
+                    <input type="text" name="listname" id="input_list" /><br/>
+                    <button type="submit">Create list</button>
+                </form>
+                <ul id="ul_lists">
+                    {% for d in lists %}
+                    <li>
+                        <a href="/lists/{{ d.id }}" {% if d.id==active_list.id %} class="a_active" {% endif %}>{{ d.name }} {% if d.id==active_list.id %} > {% endif %}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
 
-        <div id="todos-wrapper">
-            <h3>List: {{ active_list.name }}</h3>
-            <form id="form_todo">
-                <label for="input_desc">What do you need to do?</label><br/>
-                <input type="text" name="description" id="input_desc" list-id="{{ active_list.id }}" /><br/>
-                <button type="submit">Create todo</button>
-            </form>
-            <div id="error" class="hidden">Something went wrong!</div>
+            <div id="todos-wrapper">
+                <h3>List: {{ active_list.name }}</h3>
+                <form id="form_createtodo">
+                    <label for="input_todo">What do you need to do?</label><br/>
+                    <input type="text" name="description" id="input_todo" list-id="{{ active_list.id }}" /><br/>
+                    <button type="submit">Create todo</button>
+                </form>
+                <div id="error" class="hidden">Something went wrong!</div>
 
-            <ul id="ul_todos">
-                {% for t in todos %}
-                <li>
-                    <input type="checkbox" class="check_completed" data-id="{{ t.id }}" {% if t.completed %} checked {% endif %}/>
-                    <span>{{t.descr}}</span>
-                    <button class="btn_delete" data-id="{{ t.id }}">&cross;</button>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
+                <ul id="ul_todos">
+                    {% for t in todos %}
+                    <li>
+                        <input type="checkbox" class="check_completed" data-id="{{ t.id }}" {% if t.completed %} checked {% endif %}/>
+                        <span>{{t.descr}}</span>
+                        <button class="btn_delete" data-id="{{ t.id }}">&cross;</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+       </div>
 
         <script>
+            //completing todos
             const eventListenerToCheckBox = (event) => {
                 //console.log(event)
                 const todoID = event.target.dataset['id'] // it will find the attribute data-id
@@ -108,6 +124,7 @@
                 checkboxes[i].onchange = e => eventListenerToCheckBox(e);
             }
 
+            //deleting todos
             const eventListenerToDelBtn = (event) => {
                 const todoID = event.target.dataset['id'] // it will find the attribute data-id
                 console.log("deleting item with id ", todoID);
@@ -126,13 +143,14 @@
                 deleteBtns[i].onclick = e => eventListenerToDelBtn(e)
             }
 
-            document.getElementById('form_todo').onsubmit = function(e) {
+            //creating todos
+            document.getElementById('form_createtodo').onsubmit = (e) =>  {
                 e.preventDefault();
                 fetch('/todos/create', {
                     method: 'POST',
                     body: JSON.stringify({
-                        'description': document.getElementById("input_desc").value,
-                        'list_id': document.getElementById("input_desc").getAttribute('list-id')
+                        'description': document.getElementById("input_todo").value,
+                        'list_id': document.getElementById("input_todo").getAttribute('list-id')
                     }),
                     headers: {
                         'Content-Type': 'application/json'
@@ -166,6 +184,35 @@
                 })
                 .catch( (err) => {document.getElementById('error').className = ''; console.log(err)})
             }
+        
+            //creating lists
+            document.getElementById('form_createlist').onsubmit = (event) => {
+                event.preventDefault();
+                fetch('/lists/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                       'name': document.getElementById("input_list").value
+                    }),
+                })
+                .then( resp => resp.json()) 
+                .then( jresp => {
+                    //const name = jresp['name']
+                    //const id = jresp['id']
+                    const {name, id} = jresp;
+                    const listitem = document.createElement('li');
+                    const aitem = document.createElement('a');
+                    aitem.setAttribute('href', '/lists/' + id);
+                    aitem.innerHTML = name;
+                    
+                    listitem.appendChild(aitem);
+                    document.getElementById('ul_lists').appendChild(listitem);
+                })
+                .catch( err => {document.getElementById('error').className = ''; console.log(err)})
+            }
+        
         </script>
     </body>
 </html>
