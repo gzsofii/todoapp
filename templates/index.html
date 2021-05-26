@@ -82,11 +82,14 @@
             </div>
 
             <div id="todos-wrapper">
+                {% if active_list %}
                 <h3>List: {{ active_list.name }}</h3>
+                {% else %} <h3>First choose a list</h3>
+                {% endif %}
                 <form id="form_createtodo">
                     <label for="input_todo">What do you need to do?</label><br/>
                     <input type="text" name="description" id="input_todo" list-id="{{ active_list.id }}" /><br/>
-                    <button type="submit">Create todo</button>
+                    <button type="submit" {% if not active_list %} disabled {% endif %}>Create todo</button>
                 </form>
                 <div id="error" class="hidden">Something went wrong!</div>
 
@@ -99,6 +102,8 @@
                     </li>
                     {% endfor %}
                 </ul>
+                
+                
             </div>
        </div>
 
@@ -241,6 +246,7 @@
                         })
                         //console.log(event.target.parentNode.childNodes[1])
                         event.target.parentNode.remove()
+                        window.location.reload(true)
                     }
                     else console.log('no success')
                 })
