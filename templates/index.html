@@ -27,9 +27,9 @@
 
             #wrapper {
                 display: inline-block;
-                border: 1px solid rgb(155, 155, 247);
+                border: 1px solid rgb(138, 173, 248);
                 border-radius: 5px;;
-                background-color: rgb(195, 195, 250);
+                background-color: rgb(181, 204, 255);
                 padding: 10px;
             }
             
@@ -43,14 +43,15 @@
             #todos-wrapper {
                 display: inline-block;
                 vertical-align: top;
-                border: 1px solid rgb(129, 129, 240);
+                border: 1px solid rgb(109, 154, 253);
                 border-radius: 5px;;
-                background-color: rgb(155, 155, 247);
+                background-color: rgb(138, 172, 245);
                 padding: 15px;
             }
 
             a {
                 text-decoration: none;
+                color: rgb(0, 64, 202);
             }
 
             .a_active {
@@ -74,6 +75,7 @@
                     {% for d in lists %}
                     <li>
                         <a href="/lists/{{ d.id }}" {% if d.id==active_list.id %} class="a_active" {% endif %}>{{ d.name }} {% if d.id==active_list.id %} > {% endif %}</a>
+                        <button class="btn_deletelist" data-id="{{ d.id }}">&cross;</button>
                     </li>
                     {% endfor %}
                 </ul>
@@ -93,7 +95,7 @@
                     <li>
                         <input type="checkbox" class="check_completed" data-id="{{ t.id }}" {% if t.completed %} checked {% endif %}/>
                         <span>{{t.descr}}</span>
-                        <button class="btn_delete" data-id="{{ t.id }}">&cross;</button>
+                        <button class="btn_deletetodo" data-id="{{ t.id }}">&cross;</button>
                     </li>
                     {% endfor %}
                 </ul>
@@ -125,7 +127,7 @@
             }
 
             //deleting todos
-            const eventListenerToDelBtn = (event) => {
+            const eventListenerToDelTodoBtn = (event) => {
                 const todoID = event.target.dataset['id'] // it will find the attribute data-id
                 console.log("deleting item with id ", todoID);
                 fetch('/todos/' + todoID, {
@@ -137,10 +139,11 @@
                         event.target.parentNode.remove()
                     }
                 })
+                .catch( (err) => {document.getElementById('error').className = ''; console.log(err)})
             }
-            const deleteBtns = document.querySelectorAll('.btn_delete');
+            const deleteBtns = document.querySelectorAll('.btn_deletetodo');
             for (let i = 0; i < deleteBtns.length; i++) {
-                deleteBtns[i].onclick = e => eventListenerToDelBtn(e)
+                deleteBtns[i].onclick = e => eventListenerToDelTodoBtn(e)
             }
 
             //creating todos
@@ -171,10 +174,10 @@
 
                     spanitem.innerHTML = jresp['description'];
 
-                    buttonitem.className = "btn_delete";
+                    buttonitem.className = "btn_deletetodo";
                     buttonitem.setAttribute("data-id", jresp['id']);
                     buttonitem.innerHTML = "&cross;";
-                    buttonitem.onclick = (e) => eventListenerToDelBtn(e)
+                    buttonitem.onclick = (e) => eventListenerToDelTodoBtn(e)
 
                     listitem.appendChild(inputitem)
                     listitem.appendChild(spanitem);
@@ -206,13 +209,51 @@
                     const aitem = document.createElement('a');
                     aitem.setAttribute('href', '/lists/' + id);
                     aitem.innerHTML = name;
+
+                    const buttonitem = document.createElement('button');//'<button class="btn_deletelist" data-id="' + id + '">&cross;</button>'
+                    buttonitem.className = 'btn_deletelist';
+                    buttonitem.setAttribute('data-id', id)
+                    buttonitem.innerHTML = '&cross;'
+                    buttonitem.onclick = (e) => eventListenerToDelListBtn(e)
                     
                     listitem.appendChild(aitem);
+                    listitem.appendChild(buttonitem)
                     document.getElementById('ul_lists').appendChild(listitem);
                 })
                 .catch( err => {document.getElementById('error').className = ''; console.log(err)})
             }
         
+            //deleting lists
+            const  eventListenerToDelListBtn = event => {
+                //alert('Are you sure?');
+                const id = event.target.dataset.id;
+                fetch('/lists/' + id, {
+                    method: 'DELETE',
+                })
+                .then( resp => resp.json() )
+                .then( jresp => {
+                    if (jresp['success']) {
+                        console.log('deleting list with id ',id )
+                        //console.log(event.target.parentNode.childNodes)
+                        event.target.parentNode.childNodes.forEach(node => {
+                            if (node.nodeName.toLowerCase() === 'a' && node.className == "a_active") 
+                                fetch('/lists/1')
+                        })
+                        //console.log(event.target.parentNode.childNodes[1])
+                        event.target.parentNode.remove()
+                    }
+                    else console.log('no success')
+                })
+                .catch( (err) => { console.log(err)})
+                
+            }            
+            const deletelist_btns = document.querySelectorAll('.btn_deletelist')
+            for (let i = 0; i < deletelist_btns.length; i++) {
+                const btn = deletelist_btns[i];
+                btn.onclick = e => eventListenerToDelListBtn(e)
+
+            }
+            
         </script>
     </body>
 </html>

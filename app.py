@@ -25,7 +25,7 @@ class TodoList(db.Model):
     __tablename__ = "todolists"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    todos = db.relationship('Todo', backref="list", lazy=True)
+    todos = db.relationship('Todo', backref="list", lazy=True, cascade="delete")
 
 #db.create_all() # tables get created
 
@@ -69,19 +69,25 @@ def set_completed(todo_id):
 @app.route('/todos/<todo_id>', methods=['DELETE'])
 def delete_todo(todo_id):
     print('delete todo with id ', todo_id)
+    error = False
     try:
         todo = Todo.query.get(todo_id)
         db.session.delete(todo)
         db.session.commit()
     except:
+        error = True
         db.session.rollback()
         print(sys.exc_info())
     finally:
         db.session.close()
-    return jsonify({'success': True})
+    if not error:
+        return jsonify({'success': True})
+    else:
+        return "<h2>Something was not working out</h2>"
+
 
 @app.route('/lists/<list_id>')
-def get_list_todos(list_id): # this is the controller in MVC
+def get_list_todos(list_id):
     return render_template('index.html', 
                             lists=TodoList.query.order_by('id').all(), 
                             active_list=TodoList.query.get(list_id),
@@ -107,6 +113,25 @@ def create_list():
         db.session.close()
     if not error:
         return jsonify(body)
+
+@app.route('/lists/<list_id>', methods=['DELETE'])
+def delete_list(list_id):
+    print('Deleting list with id ', list_id)
+    error = False
+    try:
+        list = TodoList.query.get(list_id)
+        db.session.delete(list)
+        db.session.commit()
+    except:
+        error = True
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    if not error:
+        return jsonify({'success': True})
+    else:
+        return jsonify({'succes': False})
 
 @app.route('/')
 def index():
