@@ -56,9 +56,45 @@
 
             .a_active {
                 font-weight : bold;
-                padding-left: 15px;;
+                padding-left: 5px;;
             }
 
+            span.listcompleted_link {
+                cursor: pointer;
+            }
+
+            .listcompleted_link {
+                /*border: 1px solid white;*/
+                border-radius: 2px;
+                padding: 1px;
+            }
+
+            #ul_lists li {
+                padding: 5px;
+            }
+
+            .tooltip {
+                position: relative;
+                display: inline-block;
+            }
+            
+            .tooltip_text {
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                visibility: hidden;
+                z-index: 1;
+                background-color: rgb(83, 83, 83);
+                border: 1px solid rgb(34, 34, 34);
+                border-radius: 2px;
+                padding: 1px;
+                font-size: 0.8em;
+                color: white;
+            }
+
+            .tooltip:hover .tooltip_text {
+                visibility: visible;
+            }
         </style>
     </head>
 
@@ -74,8 +110,16 @@
                 <ul id="ul_lists">
                     {% for d in lists %}
                     <li>
-                        <a href="/lists/{{ d.id }}" {% if d.id==active_list.id %} class="a_active" {% endif %}>{{ d.name }} {% if d.id==active_list.id %} > {% endif %}</a>
-                        <button class="btn_deletelist" data-id="{{ d.id }}">&cross;</button>
+                        <span class="listcompleted_link tooltip" data-id="{{ d.id }}">
+                            &#10004;
+                            <span class="tooltip_text">Mark all completed</span>
+                        </span>
+                        <!--<input type="checkbox" class="cb_listcompleted" data-id="{{ d.id }}"/>-->
+                        <a href="/lists/{{ d.id }}" {% if d.id==active_list.id %} class="a_active" {% endif %}>{{ d.name }} {% if d.id==active_list.id %} &rsaquo; {% endif %}</a>
+                        <button class="btn_deletelist tooltip" data-id="{{ d.id }}">
+                            &cross;
+                            <span class="tooltip_text">Delete list</span>
+                        </button>
                     </li>
                     {% endfor %}
                 </ul>
@@ -96,9 +140,12 @@
                 <ul id="ul_todos">
                     {% for t in todos %}
                     <li>
-                        <input type="checkbox" class="check_completed" data-id="{{ t.id }}" {% if t.completed %} checked {% endif %}/>
+                        <input type="checkbox" class="cb_todocompleted" data-id="{{ t.id }}" {% if t.completed %} checked {% endif %}/>
                         <span>{{t.descr}}</span>
-                        <button class="btn_deletetodo" data-id="{{ t.id }}">&cross;</button>
+                        <button class="btn_deletetodo tooltip" data-id="{{ t.id }}">
+                            &cross;
+                            <span class="tooltip_text">Delete todo</span>
+                        </button>
                     </li>
                     {% endfor %}
                 </ul>
@@ -126,7 +173,7 @@
                 .then( () => document.getElementById('error').className = 'hidden')
                 .catch( () => document.getElementById('error').className = '')
             }
-            const checkboxes = document.querySelectorAll('.check_completed');
+            const checkboxes = document.querySelectorAll('.cb_todocompleted');
             for (let i = 0; i < checkboxes.length; i++) {
                 checkboxes[i].onchange = e => eventListenerToCheckBox(e);
             }
@@ -167,13 +214,13 @@
                 .then( resp => resp.json())
                 .then( jresp => {
                     console.log(jresp);
-                    const listitem = document.createElement('li');
+                    /*const listitem = document.createElement('li');
                     const inputitem = document.createElement('input');
                     const spanitem = document.createElement('span');
                     const buttonitem = document.createElement('button');
             
                     inputitem.type = "checkbox"
-                    inputitem.className = "check_completed";
+                    inputitem.className = "cb_todocompleted";
                     inputitem.setAttribute("data-id", jresp['id']);
                     inputitem.onchange = (e) => eventListenerToCheckBox(e)
 
@@ -189,6 +236,8 @@
                     listitem.appendChild(buttonitem)
                     document.getElementById('ul_todos').appendChild(listitem);
                     document.getElementById('error').className = 'hidden';
+                    */
+                   window.location.reload()
                 })
                 .catch( (err) => {document.getElementById('error').className = ''; console.log(err)})
             }
@@ -209,7 +258,7 @@
                 .then( jresp => {
                     //const name = jresp['name']
                     //const id = jresp['id']
-                    const {name, id} = jresp;
+                    /*const {name, id} = jresp;
                     const listitem = document.createElement('li');
                     const aitem = document.createElement('a');
                     aitem.setAttribute('href', '/lists/' + id);
@@ -223,7 +272,8 @@
                     
                     listitem.appendChild(aitem);
                     listitem.appendChild(buttonitem)
-                    document.getElementById('ul_lists').appendChild(listitem);
+                    document.getElementById('ul_lists').appendChild(listitem);*/checkboxes
+                    window.location.reload()
                 })
                 .catch( err => {document.getElementById('error').className = ''; console.log(err)})
             }
@@ -238,14 +288,14 @@
                 .then( resp => resp.json() )
                 .then( jresp => {
                     if (jresp['success']) {
-                        console.log('deleting list with id ',id )
+                        //console.log('deleting list with id ',id )
                         //console.log(event.target.parentNode.childNodes)
-                        event.target.parentNode.childNodes.forEach(node => {
-                            if (node.nodeName.toLowerCase() === 'a' && node.className == "a_active") 
+                        //event.target.parentNode.childNodes.forEach(node => {
+                          /*  if (node.nodeName.toLowerCase() === 'a' && node.className == "a_active") 
                                 fetch('/lists/1')
-                        })
+                        })*/
                         //console.log(event.target.parentNode.childNodes[1])
-                        event.target.parentNode.remove()
+                        //event.target.parentNode.remove()
                         window.location.reload(true)
                     }
                     else console.log('no success')
@@ -257,9 +307,20 @@
             for (let i = 0; i < deletelist_btns.length; i++) {
                 const btn = deletelist_btns[i];
                 btn.onclick = e => eventListenerToDelListBtn(e)
-
             }
             
+            //completing lists
+            const eventListenerToListCheckBox = event => {
+                const id = event.target.dataset['id']
+                console.log('completing list ', id)
+                fetch('/lists/' + id + '/set-completed', {
+                    method: 'POST'
+                })
+                .then( () => window.location.reload(true))
+            }
+            const list_ticks = document.querySelectorAll('.listcompleted_link');
+            for (let i = 0; i < list_ticks.length; i++) 
+                list_ticks[i].onclick = event => eventListenerToListCheckBox(event);
         </script>
     </body>
 </html>

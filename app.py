@@ -25,7 +25,7 @@ class TodoList(db.Model):
     __tablename__ = "todolists"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(), nullable=False)
-    todos = db.relationship('Todo', backref="list", lazy=True, cascade="all, delete-orphan")
+    todos = db.relationship('Todo', backref="list", lazy=False, cascade="all, delete-orphan")
 
 #db.create_all() # tables get created
 
@@ -113,6 +113,21 @@ def create_list():
         db.session.close()
     if not error:
         return jsonify(body)
+
+@app.route('/lists/<list_id>/set-completed', methods=["POST"])
+def set_list_completed(list_id):
+    print('setting list completed with id ', id)
+    try:
+        todos = Todo.query.filter_by(list_id=list_id).all()
+        for todo in todos:
+            todo.completed = True
+        db.session.commit()
+    except:
+        db.session.rollback()
+        print(sys.exc_info())
+    finally:
+        db.session.close()
+    return redirect(url_for('index'))
 
 @app.route('/lists/<list_id>', methods=['DELETE'])
 def delete_list(list_id):
